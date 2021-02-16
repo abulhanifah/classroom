@@ -1,4 +1,4 @@
-package classroom
+package config
 
 import (
 	"errors"
@@ -90,8 +90,8 @@ func CreateDSN() (string, error) {
 	if driver == "mysql" {
 		dsn = fmt.Sprintf("%s:%s@tcp(%s:%d)/%s", user, password, host, port, name)
 	} else if driver == "postgres" {
-		ssl := Get("DB_SSL_MODE").String()
-		if ssl == "" && Get("APP_ENV") == "local" {
+		ssl := GetConfig("DB_SSL_MODE").String()
+		if ssl == "" && GetConfig("APP_ENV") == "local" {
 			ssl = "disable"
 		}
 		if ssl != "" {
