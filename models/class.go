@@ -95,7 +95,7 @@ func (cr *CheckInResponse) SetOccupiedSeats(ctx helpers.Context) {
 	teacher := Seat{}
 	cr.OccupiedSeat = []OccupiedSeat{}
 	helpers.GetDB(ctx).
-		Raw("Select s.name as seat,u.name as student_name from seats as s inner join learnings as l on l.seat_id = s.id inner join users as u on u.id = l.user_id where s.seat_type = 'student' and s.class_id = ?", cr.ClassID).
+		Raw("Select s.name as seat,u.name as student_name from seats as s inner join learnings as l on l.seat_id = s.id inner join users as u on u.id = l.user_id where s.seat_type = 'student' and l.class_id = ?", cr.ClassID).
 		Scan(&seats)
 	helpers.GetDB(ctx).
 		Raw("Select s.name from seats as s inner join learnings as l on l.seat_id = s.id where s.seat_type = 'teacher' and s.class_id = ?", cr.ClassID).
@@ -147,20 +147,20 @@ func BookSeat(ctx helpers.Context, classId int, userId, inOut string) map[string
 				learning := Learning{}
 				if inOut == "in" {
 					helpers.GetDB(ctx).Table("seats").Where(Seat{Name: class.AvailableSeat[0]}).Scan(&seat)
-					helpers.GetDB(ctx).Table("learnings").Where(Learning{UserID: u.ID, ClassID: classId}).
+					helpers.GetDB(ctx).Table("learnings").Where(Learning{UserID: u.ID, ClassID: classId, SeatID: seat.ID}).
 						Joins("inner join seats on learnings.seat_id = seats.id").
 						Joins("inner join users on learnings.user_id = users.id").
 						Select("learnings.*,seats.name as seat_name,users.name as user_name").
 						Scan(&learning)
+					fmt.Println("masuk sini id", learning.ID)
 					if learning.ID == "" {
-						learning := Learning{SeatID: seat.ID, UserID: u.ID, ID: helpers.NewUUID(), ClassID: classId}
+						learning = Learning{SeatID: seat.ID, UserID: u.ID, ID: helpers.NewUUID(), ClassID: classId}
 						helpers.GetDB(ctx).Create(learning)
 						class.Message = fmt.Sprintf("Hi %s, your seat is %s", u.Name, seat.Name)
 					} else {
 						class.Message = fmt.Sprintf("Hi %s, your seat is %s", u.Name, learning.SeatName)
 					}
 				} else {
-					helpers.GetDB(ctx).Where(Learning{UserID: u.ID, ClassID: classId}).Delete(&learning)
 					helpers.GetDB(ctx).Table("learnings").Where(Learning{UserID: u.ID, ClassID: classId}).
 						Joins("inner join seats on learnings.seat_id = seats.id").
 						Joins("inner join users on learnings.user_id = users.id").
@@ -186,7 +186,7 @@ func BookSeat(ctx helpers.Context, classId int, userId, inOut string) map[string
 				Scan(&learning)
 			if inOut == "in" {
 				if learning.ID == "" {
-					learning := Learning{SeatID: seat.ID, UserID: u.ID, ID: helpers.NewUUID(), ClassID: classId}
+					learning = Learning{SeatID: seat.ID, UserID: u.ID, ID: helpers.NewUUID(), ClassID: classId}
 					helpers.GetDB(ctx).Create(learning)
 				}
 				class.Message = fmt.Sprintf("Hi %s, you has been set as teacher", u.Name)
@@ -198,7 +198,7 @@ func BookSeat(ctx helpers.Context, classId int, userId, inOut string) map[string
 			}
 		}
 	}
-	return class.SetOccupiedClass(ctx)
+	return cr.GetClassById(ctx, classId)
 }
 
 func (cr *Classroom) GetClassById(ctx helpers.Context, classId int) map[string]interface{} {
