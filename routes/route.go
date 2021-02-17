@@ -18,8 +18,9 @@ func Init(db *gorm.DB) *echo.Echo {
 		}))
 	}
 	e.Use(middlewares.TransactionHandler(db))
+	e.Use(middlewares.Auth)
 
-	e.POST("/api/login", controllers.LoginHandle)
+	e.GET("/api/login", controllers.LoginHandle)
 	e.POST("/api/create_class", controllers.CreateClassHandle)
 	e.POST("/api/check_in", controllers.CheckInClassHandle)
 	e.POST("/api/check_out", controllers.CheckOutClassHandle)

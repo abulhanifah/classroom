@@ -1,6 +1,7 @@
 package helpers
 
 import (
+	"fmt"
 	"strings"
 	"time"
 
@@ -79,7 +80,17 @@ func ValidateToken(ctx Context) (*Oauth2Token, error) {
 	}
 	t := Oauth2Token{}
 	err := GetDB(ctx).Model(&Oauth2Token{}).Where("access_token = ?", AccessToken).First(&t).Error
-	if IsRecordNotFoundError(err) || t.AccessExpiredAt.Before(time.Now()) {
+	if IsRecordNotFoundError(err) {
+		token := DecodeToken(AccessToken)
+		if token["access_token"] != "" {
+			AccessToken = token["access_token"].(string)
+		}
+		err = GetDB(ctx).Model(&Oauth2Token{}).Where("access_token = ?", AccessToken).First(&t).Error
+		if IsRecordNotFoundError(err) || t.AccessExpiredAt.Before(time.Now()) {
+			fmt.Println(t.AccessExpiredAt)
+			return nil, constants.ErrAccessDenied
+		}
+	} else if t.AccessExpiredAt.Before(time.Now()) {
 		return nil, constants.ErrAccessDenied
 	}
 

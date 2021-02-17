@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"encoding/base64"
-	"encoding/json"
 	"strings"
 
 	"github.com/abulhanifah/classroom/constants"
@@ -47,13 +46,5 @@ func LoginHandle(c echo.Context) error {
 		return echo.NewHTTPError(constants.StatusCodes[err], constants.Descriptions[err])
 	}
 	t, _ = o.SaveToken(t)
-	return c.JSON(200, map[string]interface{}{"token": EncodeToken(t.UserID, t.AccessToken, t.RefreshToken)})
-}
-func EncodeToken(id, access_token, refresh_token string) string {
-	u, _ := json.Marshal(map[string]interface{}{
-		"id":            id,
-		"access_token":  access_token,
-		"refresh_token": refresh_token,
-	})
-	return base64.StdEncoding.EncodeToString([]byte(u))
+	return c.JSON(200, map[string]interface{}{"token": helpers.EncodeToken(t.UserID, t.AccessToken, t.RefreshToken)})
 }

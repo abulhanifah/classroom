@@ -1,15 +1,17 @@
 package models
 
 import (
+	"time"
+
 	"github.com/abulhanifah/classroom/helpers"
 )
 
 type Setting struct {
-	Key       string `json:"key,omitempty" gorm:"primary_key;type:varchar(100)"`
-	Value     string `json:"value,omitempty"`
-	CreatedAt string `json:"created_at,omitempty" gorm:"type:timestamp"`
-	UpdatedAt string `json:"updated_at,omitempty" gorm:"type:timestamp"`
-	DeletedAt string `json:"-"  gorm:"type:timestamp"`
+	Key       string    `json:"key,omitempty" gorm:"primary_key;type:varchar(100)"`
+	Value     string    `json:"value,omitempty"`
+	CreatedAt string    `json:"created_at,omitempty" gorm:"type:timestamp"`
+	UpdatedAt time.Time `json:"updated_at,omitempty"`
+	DeletedAt time.Time `json:"-" `
 }
 
 func (o *Setting) Get(ctx helpers.Context) map[string]interface{} {

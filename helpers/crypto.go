@@ -2,6 +2,7 @@ package helpers
 
 import (
 	"encoding/base64"
+	"encoding/json"
 	"math"
 	"math/rand"
 	"strconv"
@@ -94,4 +95,21 @@ func RandomString(n int) string {
 	}
 	r := string(b)
 	return r
+}
+
+func EncodeToken(id, access_token, refresh_token string) string {
+	u, _ := json.Marshal(map[string]interface{}{
+		"id":            id,
+		"access_token":  access_token,
+		"refresh_token": refresh_token,
+	})
+	return base64.StdEncoding.EncodeToString([]byte(u))
+}
+func DecodeToken(token string) map[string]interface{} {
+	mapToken := map[string]interface{}{}
+	decode, err := base64.StdEncoding.DecodeString(token)
+	if err == nil {
+		json.Unmarshal(decode, &mapToken)
+	}
+	return mapToken
 }

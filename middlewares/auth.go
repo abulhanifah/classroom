@@ -34,13 +34,16 @@ func CheckAuth(c echo.Context) (bool, bool) {
 	if err == nil {
 		helpers.SetAuthContext(ctx, tokenInfo)
 		isTokenValid = true
-		// isACLValid = helpers.CheckAcl(ctx, helpers.GetAclKeyFromRequest(ctx))
+		isACLValid = helpers.CheckAcl(ctx, helpers.GetAclKeyFromRequest(ctx))
 	}
 	return isTokenValid, isACLValid
 }
 
 func IsSkipAuth(path string) bool {
 	if strings.HasPrefix(path, "/callback") {
+		return true
+	}
+	if strings.HasPrefix(path, "/api/login") {
 		return true
 	}
 	if strings.HasPrefix(path, "/auth") {

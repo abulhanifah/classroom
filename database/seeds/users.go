@@ -4,7 +4,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/jinzhu/gorm"
 
-	"github.com/abulhanifah/classroom/helpers"
 	"github.com/abulhanifah/classroom/models"
 )
 
@@ -13,10 +12,6 @@ func SeedUser(db *gorm.DB) {
 		temp := []models.User{}
 		db.Where(models.User{Email: o.Email}).Limit(1).Find(&temp)
 		if len(temp) == 0 {
-			hash, err := helpers.Hash(o.Password)
-			if err == nil {
-				o.Password = string(hash)
-			}
 			db.Create(&o)
 		}
 	}

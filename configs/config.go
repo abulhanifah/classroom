@@ -88,7 +88,7 @@ func CreateDSN() (string, error) {
 
 	var dsn string
 	if driver == "mysql" {
-		dsn = fmt.Sprintf("%s:%s@tcp(%s:%d)/%s", user, password, host, port, name)
+		dsn = fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?parseTime=true", user, password, host, port, name)
 	} else if driver == "postgres" {
 		ssl := GetConfig("DB_SSL_MODE").String()
 		if ssl == "" && GetConfig("APP_ENV") == "local" {
