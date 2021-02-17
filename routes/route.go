@@ -1,19 +1,28 @@
 package routes
 
 import (
+	"github.com/abulhanifah/classroom/configs"
+	"github.com/abulhanifah/classroom/controllers"
+	"github.com/abulhanifah/classroom/middlewares"
 	"github.com/jinzhu/gorm"
 	"github.com/labstack/echo/v4"
-	"gitlab.com/abulhanifah/classroom/configs"
+	"github.com/labstack/echo/v4/middleware"
 )
 
 func Init(db *gorm.DB) *echo.Echo {
 	e := echo.New()
-	env := configs.Get("APP_ENV").String()
+	env := configs.GetConfig("APP_ENV").String()
 	if env == "production" || env == "development" {
 		e.Use(middleware.RecoverWithConfig(middleware.RecoverConfig{
 			StackSize: 1 << 10, // 1 KB
 		}))
 	}
+	e.Use(middlewares.TransactionHandler(db))
+
+	e.POST("/api/login", controllers.LoginHandle)
+	e.POST("/api/create_class", controllers.CreateClassHandle)
+	e.POST("/api/check_in", controllers.CheckInClassHandle)
+	e.POST("/api/check_out", controllers.CheckOutClassHandle)
 
 	return e
 }

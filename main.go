@@ -1,21 +1,34 @@
 package main
 
 import (
-	"fmt"
+	"sync"
 
-	"gitlab.com/abulhanifah/classroom/configs"
-	"gitlab.com/abulhanifah/classroom/helpers"
-	"gitlab.com/abulhanifah/classroom/routes"
+	"github.com/abulhanifah/classroom/configs"
+	"github.com/abulhanifah/classroom/database"
+	"github.com/abulhanifah/classroom/helpers"
+	"github.com/abulhanifah/classroom/routes"
+	"github.com/jinzhu/gorm"
+)
+
+var (
+	syncOnce sync.Once
+	dbh      *gorm.DB
 )
 
 func main() {
-	fmt.Println("Initial commit")
-	db := helpers.Connect()
-	defer db.Close()
+	syncOnce.Do(DBConnection)
+	defer dbh.Close()
 
-	r := routes.Init(db)
-	err := r.Start(":" + configs.Get("APP_PORT").String())
+	r := routes.Init(dbh)
+	err := r.Start(":" + configs.GetConfig("APP_PORT").String())
 	if err != nil {
 		r.Logger.Fatal(err)
 	}
+}
+
+func DBConnection() {
+	dbh = helpers.Connect()
+	database.MigrationDB = dbh
+	database.Migrate()
+	database.Seed()
 }

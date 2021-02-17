@@ -6,7 +6,8 @@ import (
 
 	"github.com/jinzhu/gorm"
 
-	"gitlab.com/abulhanifah/classroom/configs"
+	"github.com/abulhanifah/classroom/configs"
+	"github.com/abulhanifah/classroom/constants"
 )
 
 type Oauth2Manager struct {
@@ -40,14 +41,14 @@ type Oauth2Client struct {
 	ID        string `gorm:"type:varchar(32)"`
 	Name      string `gorm:"type:varchar(255)"`
 	Secret    string `gorm:"type:varchar(255)"`
-	UserID    string `gorm:"type:uuid;index:oauth2_client_user_id"`
+	UserID    string `gorm:"type:char(36);index:oauth2_client_user_id"`
 	CreatedAt time.Time
 	UpdatedAt time.Time
 	DeletedAt *time.Time
 }
 
 type Oauth2RedirectUrl struct {
-	ID        string `gorm:"type:uuid"`
+	ID        string `gorm:"type:char(36)"`
 	Url       string `gorm:"type:varchar(255)"`
 	ClientID  string `gorm:"type:varchar(32);index:oauth2_redirect_url_client_id"`
 	CreatedAt time.Time
@@ -56,9 +57,9 @@ type Oauth2RedirectUrl struct {
 }
 
 type Oauth2Token struct {
-	ID              string    `json:"-" gorm:"type:uuid"`
+	ID              string    `json:"-" gorm:"type:char(36)"`
 	Code            string    `json:"-" gorm:"type:varchar(32);index:oauth2_token_code"`
-	UserID          string    `json:"-" gorm:"type:uuid;index:oauth2_token_user_id"`
+	UserID          string    `json:"-" gorm:"type:char(36);index:oauth2_token_user_id"`
 	ClientID        string    `json:"-" gorm:"type:varchar(32);index:oauth2_token_client_id"`
 	AccessToken     string    `json:"access_token" gorm:"type:varchar(32);index:oauth2_token_access_token"`
 	TokenType       string    `json:"token_type" gorm:"-"`
@@ -79,7 +80,7 @@ func ValidateToken(ctx Context) (*Oauth2Token, error) {
 	t := Oauth2Token{}
 	err := GetDB(ctx).Model(&Oauth2Token{}).Where("access_token = ?", AccessToken).First(&t).Error
 	if IsRecordNotFoundError(err) || t.AccessExpiredAt.Before(time.Now()) {
-		return nil, constant.ErrAccessDenied
+		return nil, constants.ErrAccessDenied
 	}
 
 	return &t, nil
@@ -97,24 +98,24 @@ func (o *Oauth2Manager) GenerateAuthToken(ctx Context) (string, error) {
 
 func (o *Oauth2Manager) GenerateAccessToken(ctx Context) (*Oauth2Token, error) {
 	o.Tx = GetDB(ctx)
-	if o.GrantType == constant.Oauth2AuthorizationCode {
+	if o.GrantType == constants.Oauth2AuthorizationCode {
 		return o.Oauth2AuthorizationCode()
-	} else if o.GrantType == constant.Oauth2PasswordCredentials {
+	} else if o.GrantType == constants.Oauth2PasswordCredentials {
 		return o.Oauth2PasswordCredentials()
-	} else if o.GrantType == constant.Oauth2ClientCredentials {
+	} else if o.GrantType == constants.Oauth2ClientCredentials {
 		return o.Oauth2ClientCredentials()
-	} else if o.GrantType == constant.Oauth2Refreshing {
+	} else if o.GrantType == constants.Oauth2Refreshing {
 		return o.Oauth2Refreshing()
-	} else if o.GrantType == constant.Oauth2Implicit {
+	} else if o.GrantType == constants.Oauth2Implicit {
 		return o.Oauth2Implicit()
 	} else {
-		return &Oauth2Token{}, constant.ErrInvalidGrant
+		return &Oauth2Token{}, constants.ErrInvalidGrant
 	}
 }
 
 // todo
 func (o *Oauth2Manager) Oauth2AuthorizationCode() (*Oauth2Token, error) {
-	return nil, constant.ErrUnsupportedGrantType
+	return nil, constants.ErrUnsupportedGrantType
 }
 
 func (o *Oauth2Manager) Oauth2PasswordCredentials() (*Oauth2Token, error) {
@@ -151,7 +152,7 @@ func (o *Oauth2Manager) Oauth2Refreshing() (*Oauth2Token, error) {
 
 // todo
 func (o *Oauth2Manager) Oauth2Implicit() (*Oauth2Token, error) {
-	return nil, constant.ErrUnsupportedGrantType
+	return nil, constants.ErrUnsupportedGrantType
 }
 
 func (o *Oauth2Manager) SaveToken(t *Oauth2Token) (*Oauth2Token, error) {
@@ -164,9 +165,9 @@ func (o *Oauth2Manager) SaveToken(t *Oauth2Token) (*Oauth2Token, error) {
 		TokenType:       o.GrantType,
 		AccessToken:     NewToken(),
 		RefreshToken:    NewToken(),
-		ExpireIn:        int(configs.Get("OAUTH2_ACCESS_EXPIRE_IN").Duration().Seconds()),
-		AccessExpiredAt: time.Now().Add(configs.Get("OAUTH2_ACCESS_EXPIRE_IN").Duration()),
-		ExpiredAt:       time.Now().Add(configs.Get("OAUTH2_REFRESH_EXPIRE_IN").Duration()),
+		ExpireIn:        int(configs.GetConfig("OAUTH2_ACCESS_EXPIRE_IN").Duration().Seconds()),
+		AccessExpiredAt: time.Now().Add(configs.GetConfig("OAUTH2_ACCESS_EXPIRE_IN").Duration()),
+		ExpiredAt:       time.Now().Add(configs.GetConfig("OAUTH2_REFRESH_EXPIRE_IN").Duration()),
 	}).FirstOrCreate(&t)
 	return t, nil
 }
@@ -175,10 +176,10 @@ func (o *Oauth2Manager) ClientLogin() (*Oauth2Token, error) {
 	client := Oauth2Client{}
 	err := o.Tx.Model(&Oauth2Client{}).Where("id = ?", o.ClientID).First(&client).Error
 	if IsRecordNotFoundError(err) {
-		return nil, constant.ErrInvalidClient
+		return nil, constants.ErrInvalidClient
 	}
 	if o.ClientSecret != client.Secret {
-		return nil, constant.ErrUnauthorizedClient
+		return nil, constants.ErrUnauthorizedClient
 	}
 
 	t := Oauth2Token{}
@@ -197,7 +198,7 @@ func (o *Oauth2Manager) UserLogin(t *Oauth2Token) (*Oauth2Token, error) {
 	user := User{}
 	err := o.Tx.Model(&User{}).Where(key+" = ?", o.Username).First(&user).Error
 	if IsRecordNotFoundError(err) || VerifyHash(user.Password, o.Password) != nil {
-		return nil, constant.ErrAccessDenied
+		return nil, constants.ErrAccessDenied
 	}
 
 	t.UserID = user.ID
@@ -207,7 +208,7 @@ func (o *Oauth2Manager) UserLogin(t *Oauth2Token) (*Oauth2Token, error) {
 func (o *Oauth2Manager) CheckRefreshToken(t *Oauth2Token) (*Oauth2Token, error) {
 	err := o.Tx.Model(&Oauth2Token{}).Where("refresh_token = ?", o.RefreshToken).First(&t).Error
 	if o.RefreshToken == "" || IsRecordNotFoundError(err) || t.ExpiredAt.Before(time.Now()) {
-		return nil, constant.ErrAccessDenied
+		return nil, constants.ErrAccessDenied
 	}
 	return t, nil
 }

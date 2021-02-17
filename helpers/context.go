@@ -1,10 +1,9 @@
 package helpers
 
 import (
+	"github.com/abulhanifah/classroom/constants"
 	"github.com/jinzhu/gorm"
 	"github.com/labstack/echo/v4"
-
-	"github.com/abulhanifah/classroom/constants"
 )
 
 type Context echo.Context
