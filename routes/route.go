@@ -24,6 +24,8 @@ func Init(db *gorm.DB) *echo.Echo {
 	e.POST("/api/create_class", controllers.CreateClassHandle)
 	e.POST("/api/check_in", controllers.CheckInClassHandle)
 	e.POST("/api/check_out", controllers.CheckOutClassHandle)
+	e.GET("/api/get_class_list", controllers.GetClassHandle)
+	e.GET("/api/get_class_by_id/:id", controllers.GetClassHandle)
 
 	return e
 }

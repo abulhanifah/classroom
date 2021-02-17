@@ -90,7 +90,6 @@ func (cr *CheckInResponse) SetAvailableSeats(ctx helpers.Context) {
 	}
 	sort.Strings(cr.AvailableSeat)
 }
-
 func (cr *CheckInResponse) SetOccupiedSeats(ctx helpers.Context) {
 	seats := []OccupiedSeat{}
 	teacher := Seat{}
@@ -199,5 +198,11 @@ func BookSeat(ctx helpers.Context, classId int, userId, inOut string) map[string
 			}
 		}
 	}
+	return class.SetOccupiedClass(ctx)
+}
+
+func (cr *Classroom) GetClassById(ctx helpers.Context, classId int) map[string]interface{} {
+	helpers.GetDB(ctx).Table("classrooms").Where(Classroom{ID: classId}).Scan(&cr)
+	class := CheckInResponse{ClassID: classId, Rows: cr.Rows, Columns: cr.Columns}
 	return class.SetOccupiedClass(ctx)
 }
