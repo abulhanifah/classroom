@@ -23,3 +23,50 @@ DB_NAME=declassroom
 DB_USER=root
 DB_PASSWORD=root
 ```
+## Run Application
+```
+go run main.go
+```
+## Endpoints
+- [x] Authorization
+GET /api/login
+headers{Authorization:Bearer token}
+Token is base64 encode "email:password" or "refresh_token:thetoken"
+response
+```
+{
+  "token":"the encode oauth token"
+}
+```
+- [x] Get Class Room Lists
+GET /api/login
+headers{Authorization:Bearer token}
+Token is from authorization
+response
+```
+{
+    "count": 3,
+    "data": [
+        {
+            "class_id": 1,
+            "class_name": "Class A",
+            "columns": 4,
+            "rows": 5
+        },
+        {
+            "class_id": 2,
+            "class_name": "Class B",
+            "columns": 4,
+            "rows": 5
+        },
+        {
+            "class_id": 3,
+            "class_name": "Class C",
+            "columns": 4,
+            "rows": 5
+        }
+    ]
+}```
+- [x] Get Class Room By Id
+- [x] Check In Class
+- [x] Check Out Class
