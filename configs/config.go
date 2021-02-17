@@ -1,4 +1,4 @@
-package config
+package configs
 
 import (
 	"errors"
@@ -80,12 +80,12 @@ func (c Config) Duration() time.Duration {
 
 func CreateDSN() (string, error) {
 	host := GetConfig("DB_HOST").String()
-	port := GetConfig("DB_PORT").String()
+	port := GetConfig("DB_PORT").Int()
 	name := GetConfig("DB_NAME").String()
 	user := GetConfig("DB_USER").String()
 	password := GetConfig("DB_PASSWORD").String()
-
 	driver := GetConfig("DB_DRIVER").String()
+
 	var dsn string
 	if driver == "mysql" {
 		dsn = fmt.Sprintf("%s:%s@tcp(%s:%d)/%s", user, password, host, port, name)

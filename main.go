@@ -3,11 +3,19 @@ package main
 import (
 	"fmt"
 
-	"github.com/abulhanifah/classroom/helper"
+	"gitlab.com/abulhanifah/classroom/configs"
+	"gitlab.com/abulhanifah/classroom/helpers"
+	"gitlab.com/abulhanifah/classroom/routes"
 )
 
 func main() {
 	fmt.Println("Initial commit")
-	db := helper.Connect()
+	db := helpers.Connect()
 	defer db.Close()
+
+	r := routes.Init(db)
+	err := r.Start(":" + configs.Get("APP_PORT").String())
+	if err != nil {
+		r.Logger.Fatal(err)
+	}
 }
